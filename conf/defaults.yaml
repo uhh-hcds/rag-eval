@@ -13,4 +13,7 @@ subset: ""
 sys_prompt_path: prompt/sys_prompts/chatgpt.txt
 output_file_path: outputs/${now:%y-%m-%d_%H:%M}_${model.model_name_short}/inference_log.json
 template_name: prompt/llama3.1_rag.j2
+VLLM_API_KEY:
+vllm_port:
+base_url:
 debug: False

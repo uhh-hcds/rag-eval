@@ -20,6 +20,9 @@ from encourage.metrics import (
     MeanReciprocalRank,
     NonAnswerCritic,
     ReferenceAnswerLength,
+    AnswerFaithfulness,
+    ContextPrecision,
+    AnswerRelevance,
 )
 from encourage.metrics.metric import Metric
 from encourage.prompts import PromptCollection
@@ -122,6 +125,7 @@ def main(cfg: Config) -> None:
     for i in range(len(dataset.raw_data)):
         meta_data = MetaData(
             {
+                "question": last_user_contents[i],
                 "reference_answer": dataset.raw_data["answers"][i][0],
                 "reference_document": Document(
                     id=str(dataset.raw_data["context_id"][i]),
@@ -148,12 +152,8 @@ def main(cfg: Config) -> None:
         top_p=cfg.model.top_p,
     )
 
-    llm = LLM(
-        model=cfg.model.model_name,
-        gpu_memory_utilization=cfg.model.gpu_memory_utilization,
-    )
-    runner = BatchInferenceRunner(llm, sampling_params)
-
+    runner = BatchInferenceRunner(sampling_params, cfg.model.model_name,
+                                  base_url=cfg.base_url)
     with mlflow.start_run():
         mlflow.log_params(flatten_dict(cfg))
         mlflow.log_params({"dataset_size": len(dataset.raw_data)})
@@ -176,9 +176,9 @@ def main(cfg: Config) -> None:
             AnswerSimilarity(model_name="all-mpnet-base-v2"),
             ContextRecall(runner=runner),
             NonAnswerCritic(runner=runner),
-            # AnswerFaithfulness(runner=runner),
-            # ContextPrecision(runner=runner),
-            # AnswerRelevance(runner=runner),
+            AnswerFaithfulness(runner=runner),
+            ContextPrecision(runner=runner),
+            AnswerRelevance(runner=runner),
         ]
 
         results = {}
